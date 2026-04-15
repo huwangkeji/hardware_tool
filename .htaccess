@@ -1,0 +1,66 @@
+# Apache配置文件 - 硬件调试工具站
+
+# 启用URL重写
+RewriteEngine On
+
+# 设置基础路径
+RewriteBase /
+
+# 静态资源直接访问，不经过PHP处理
+RewriteRule ^assets/(css|js|images)/ - [L]
+RewriteRule ^favicon\.ico$ - [L]
+
+# 如果请求的是实际文件或目录，直接访问
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 禁止访问敏感目录
+RewriteRule ^(config|includes|database|logs|temp_download)/ - [F,L]
+
+# 其他请求都转发到index.php
+RewriteRule ^(.*)$ index.php?page=$1 [QSA,L]
+
+# 禁止目录浏览
+Options -Indexes
+
+# 设置默认字符集
+AddDefaultCharset UTF-8
+
+# 压缩输出
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# 浏览器缓存
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# 安全头
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# 禁止访问隐藏文件
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# PHP设置
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
