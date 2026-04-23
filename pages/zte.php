@@ -65,13 +65,8 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- AT指令区 -->
         <div class="at-panel">
             <h3>AT指令</h3>
-            <div class="at-commands">
-                <button class="btn btn-sm" onclick="sendAT('AT')">AT</button>
-                <button class="btn btn-sm" onclick="sendAT('ATI')">ATI (设备信息)</button>
-                <button class="btn btn-sm" onclick="sendAT('AT+CSQ')">AT+CSQ (信号质量)</button>
-                <button class="btn btn-sm" onclick="sendAT('AT+CPIN?')">AT+CPIN? (SIM卡状态)</button>
-                <button class="btn btn-sm" onclick="sendAT('AT+CREG?')">AT+CREG? (网络注册)</button>
-                <button class="btn btn-sm" onclick="sendAT('AT+COPS?')">AT+COPS? (运营商)</button>
+            <div class="at-commands" id="atCommands">
+                <!-- AT指令按钮由JS根据芯片类型动态生成 -->
             </div>
             <div class="custom-at">
                 <input type="text" id="customAT" placeholder="输入自定义AT指令..." onkeypress="if(event.key==='Enter')sendCustomAT()">
@@ -81,7 +76,14 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- 数据收发区 -->
         <div class="data-panel">
-            <h3>数据收发</h3>
+            <div class="data-panel-header">
+                <h3>数据收发</h3>
+                <div class="font-controls">
+                    <button class="btn btn-sm btn-icon" onclick="changeFontSize(-1)" title="减小字体">A-</button>
+                    <span class="font-size-label" id="fontSizeLabel">13px</span>
+                    <button class="btn btn-sm btn-icon" onclick="changeFontSize(1)" title="增大字体">A+</button>
+                </div>
+            </div>
             <div class="data-display" id="dataDisplay">
                 <div class="data-log" id="dataLog"></div>
             </div>
@@ -113,6 +115,92 @@ let serialPort = null;
 let reader = null;
 let writer = null;
 let isConnected = false;
+let currentFontSize = 13; // 数据区字体大小
+
+// 当前芯片类型
+const DEVICE_TYPE = '<?php echo $device_type; ?>';
+
+// AT指令集定义 - 按芯片类型区分
+const AT_COMMANDS = {
+    // 中兴微(ZTE)芯片AT指令
+    zte: [
+        { cmd: 'AT', desc: '基础测试' },
+        { cmd: 'ATI', desc: '设备信息' },
+        { cmd: 'AT+CGMI', desc: '厂商信息' },
+        { cmd: 'AT+CGMM', desc: '模块型号' },
+        { cmd: 'AT+CGMR', desc: '软件版本' },
+        { cmd: 'AT+CGSN', desc: 'IMEI号' },
+        { cmd: 'AT+CSQ', desc: '信号质量' },
+        { cmd: 'AT+CPIN?', desc: 'SIM卡状态' },
+        { cmd: 'AT+CREG?', desc: '网络注册' },
+        { cmd: 'AT+CGREG?', desc: 'GPRS注册' },
+        { cmd: 'AT+COPS?', desc: '运营商信息' },
+        { cmd: 'AT+CEREG?', desc: 'LTE注册状态' },
+        { cmd: 'AT+CGDCONT?', desc: 'PDP上下文' },
+        { cmd: 'AT+ZSNT?', desc: '网络模式' },
+        { cmd: 'AT+ZGSR?', desc: '服务报告' },
+        { cmd: 'AT+ZSIM?', desc: 'SIM卡信息' },
+        { cmd: 'AT+ZCDRUN?', desc: '开发模式' },
+        { cmd: 'AT+ZCDRUN=0', desc: '开启开发模式' },
+        { cmd: 'AT+ZCDRUN=1', desc: '关闭开发模式' },
+        { cmd: 'AT+ZRESET', desc: '重启模块' },
+    ],
+    // ASR芯片AT指令
+    asr: [
+        { cmd: 'AT', desc: '基础测试' },
+        { cmd: 'ATI', desc: '设备信息' },
+        { cmd: 'AT+CGMI', desc: '厂商信息' },
+        { cmd: 'AT+CGMM', desc: '模块型号' },
+        { cmd: 'AT+CGMR', desc: '软件版本' },
+        { cmd: 'AT+CGSN', desc: 'IMEI号' },
+        { cmd: 'AT+CSQ', desc: '信号质量' },
+        { cmd: 'AT+CPIN?', desc: 'SIM卡状态' },
+        { cmd: 'AT+CREG?', desc: '网络注册' },
+        { cmd: 'AT+CGREG?', desc: 'GPRS注册' },
+        { cmd: 'AT+COPS?', desc: '运营商信息' },
+        { cmd: 'AT+CEREG?', desc: 'LTE注册状态' },
+        { cmd: 'AT+CGDCONT?', desc: 'PDP上下文' },
+        { cmd: 'AT+ASRSTK?', desc: 'STK信息' },
+        { cmd: 'AT+ASRNET?', desc: '网络信息' },
+        { cmd: 'AT+ASRCSQ?', desc: '详细信号' },
+        { cmd: 'AT+ASRBAND?', desc: '频段信息' },
+        { cmd: 'AT+ASRLOCK?', desc: '频段锁定' },
+        { cmd: 'AT+ASRNV?', desc: 'NV信息' },
+        { cmd: 'AT+CFUN=1,1', desc: '重启模块' },
+    ],
+    // 展锐(Unisoc)芯片AT指令
+    unisoc: [
+        { cmd: 'AT', desc: '基础测试' },
+        { cmd: 'ATI', desc: '设备信息' },
+        { cmd: 'AT+CGMI', desc: '厂商信息' },
+        { cmd: 'AT+CGMM', desc: '模块型号' },
+        { cmd: 'AT+CGMR', desc: '软件版本' },
+        { cmd: 'AT+CGSN', desc: 'IMEI号' },
+        { cmd: 'AT+CSQ', desc: '信号质量' },
+        { cmd: 'AT+CPIN?', desc: 'SIM卡状态' },
+        { cmd: 'AT+CREG?', desc: '网络注册' },
+        { cmd: 'AT+CGREG?', desc: 'GPRS注册' },
+        { cmd: 'AT+COPS?', desc: '运营商信息' },
+        { cmd: 'AT+CEREG?', desc: 'LTE注册状态' },
+        { cmd: 'AT+CGDCONT?', desc: 'PDP上下文' },
+        { cmd: 'AT+SPNWNAME?', desc: '网络名称' },
+        { cmd: 'AT+SPUSIMCFG?', desc: 'SIM配置' },
+        { cmd: 'AT+SPNVMREAD?', desc: 'NV读取' },
+        { cmd: 'AT+SPBAND?', desc: '频段信息' },
+        { cmd: 'AT+SPNETMODE?', desc: '网络模式' },
+        { cmd: 'AT+SPAPNCFG?', desc: 'APN配置' },
+        { cmd: 'AT+CFUN=1,1', desc: '重启模块' },
+    ]
+};
+
+// 根据芯片类型生成AT指令按钮
+function renderATCommands() {
+    const container = document.getElementById('atCommands');
+    const commands = AT_COMMANDS[DEVICE_TYPE] || AT_COMMANDS.zte;
+    container.innerHTML = commands.map(item =>
+        `<button class="btn btn-sm" onclick="sendAT('${item.cmd}')" title="${item.cmd}">${item.cmd} (${item.desc})</button>`
+    ).join('');
+}
 
 // 连接串口
 async function connectSerial() {
@@ -306,8 +394,17 @@ function clearData() {
     document.getElementById('dataLog').innerHTML = '';
 }
 
+// 字体大小控制
+function changeFontSize(delta) {
+    currentFontSize = Math.max(9, Math.min(24, currentFontSize + delta));
+    const dataLog = document.getElementById('dataLog');
+    dataLog.style.fontSize = currentFontSize + 'px';
+    document.getElementById('fontSizeLabel').textContent = currentFontSize + 'px';
+}
+
 // 页面加载完成
 document.addEventListener('DOMContentLoaded', function() {
+    renderATCommands();
     addLog('系统', '页面已加载,请连接串口', 'info');
 });
 </script>
