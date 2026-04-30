@@ -2,7 +2,8 @@
 /**
  * 后台仪表盘 - 统计概览
  */
-// 静态资源直接返回，不经过PHP处理
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 if (preg_match('#^/assets/(css|js|images)/#', $request_uri)) {
     $file_path = __DIR__ . '/../' . ltrim($request_uri, '/');
@@ -155,6 +156,10 @@ $stats = getStatsOverview(7);
                 <a href="/admin/settings.php" class="nav-item">
                     <span class="icon">⚙</span>
                     <span>网站设置</span>
+                </a>
+                <a href="/admin/help.php" class="nav-item">
+                    <span class="icon">📖</span>
+                    <span>帮助文章</span>
                 </a>
                 <a href="/admin/statistics.php" class="nav-item">
                     <span class="icon">📈</span>

@@ -71,8 +71,135 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="custom-at">
                 <input type="text" id="customAT" placeholder="输入自定义AT指令..." onkeypress="if(event.key==='Enter')sendCustomAT()">
                 <button class="btn btn-primary" onclick="sendCustomAT()">发送</button>
+                <?php if ($device_type === 'zte'): ?>
+                <button class="btn btn-sm" onclick="sendAT('AT+CGEQOSRDP=1')">限速检测</button>
+                <?php endif; ?>
             </div>
         </div>
+
+        <?php if ($device_type === 'zte' || $device_type === 'asr'): ?>
+        <!-- 工厂模式与ADB控制 -->
+        <div class="func-panel" id="panelFactory">
+            <h3>工厂模式与ADB</h3>
+            <div class="func-row">
+                <?php if ($device_type === 'zte'): ?>
+                <button class="btn btn-warning" onclick="sendAT('AT+ZMODE=1')">开启工厂模式</button>
+                <button class="btn btn-secondary" onclick="sendAT('AT+ZMODE=0')">退出工厂模式</button>
+                <span class="func-separator"></span>
+                <label class="func-label">ADB IP:</label>
+                <input type="text" id="adbIp" value="192.168.0.1" class="func-input-sm">
+                <button class="btn btn-sm" onclick="toggleADB(1,1)">开启ADB</button>
+                <button class="btn btn-sm" onclick="toggleADB(1,0)">关闭ADB</button>
+                <button class="btn btn-sm" onclick="toggleADB(2,1)">开启ADB2</button>
+                <button class="btn btn-sm" onclick="toggleADB(2,0)">关闭ADB2</button>
+                <span class="func-separator"></span>
+                <button class="btn btn-sm btn-danger" onclick="rebootDevice(1)">重启</button>
+                <button class="btn btn-sm btn-danger" onclick="rebootDevice(2)">重启2</button>
+                <?php elseif ($device_type === 'asr'): ?>
+                <button class="btn btn-warning" onclick="sendAT('AT*PROD=1')">开启工厂模式</button>
+                <button class="btn btn-secondary" onclick="sendAT('AT*PROD=0')">退出工厂模式</button>
+                <?php endif; ?>
+            </div>
+            <p class="func-hint">需开启工厂模式才能写号，写入之前先删除</p>
+        </div>
+
+        <!-- 设备写号 (IMEI/SN/MAC) -->
+        <div class="func-panel" id="panelWriteInfo">
+            <h3>设备写号</h3>
+            <div class="write-field">
+                <label>IMEI:</label>
+                <input type="text" id="fieldIMEI" class="func-input">
+                <button class="btn btn-sm" onclick="readField('imei')">读取</button>
+                <?php if ($device_type === 'asr'): ?>
+                <button class="btn btn-sm btn-danger" onclick="sendAT('AT*MRD_IMEI=D')">删除</button>
+                <button class="btn btn-sm btn-primary" onclick="writeField('imei')">写入</button>
+                <?php else: ?>
+                <button class="btn btn-sm btn-primary" onclick="writeField('imei')">写入</button>
+                <?php endif; ?>
+            </div>
+            <?php if ($device_type === 'asr'): ?>
+            <div class="write-field">
+                <label>SN:</label>
+                <input type="text" id="fieldSN" class="func-input" placeholder="仅支持有SN号的设备">
+                <button class="btn btn-sm" onclick="readField('sn')">读取</button>
+                <button class="btn btn-sm btn-danger" onclick="sendAT('AT*MRD_SN=D')">删除</button>
+                <button class="btn btn-sm btn-primary" onclick="writeField('sn')">写入</button>
+            </div>
+            <?php endif; ?>
+            <div class="write-field">
+                <label>MAC:</label>
+                <input type="text" id="fieldMAC" class="func-input">
+                <button class="btn btn-sm" onclick="readField('mac')">读取</button>
+                <?php if ($device_type === 'asr'): ?>
+                <button class="btn btn-sm btn-danger" onclick="sendAT('AT*MRD_WIFIID=D')">删除</button>
+                <?php endif; ?>
+                <button class="btn btn-sm btn-primary" onclick="writeField('mac')">写入</button>
+            </div>
+            <?php if ($device_type === 'zte'): ?>
+            <div class="write-field">
+                <label>有线MAC:</label>
+                <input type="text" id="fieldMAC2" class="func-input">
+                <button class="btn btn-sm" onclick="sendAT('AT+MAC2?')">读取</button>
+                <button class="btn btn-sm btn-primary" onclick="writeField('mac2')">写入</button>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($device_type === 'asr'): ?>
+        <!-- 切卡与重启 -->
+        <div class="func-panel" id="panelSimReboot">
+            <h3>切卡与重启</h3>
+            <div class="func-row">
+                <button class="btn btn-primary" onclick="sendAT('AT+SWSIM=0')">切换到卡1</button>
+                <button class="btn btn-primary" onclick="sendAT('AT+SWSIM=1')">切换到卡2</button>
+                <span class="func-separator"></span>
+                <button class="btn btn-danger" onclick="sendAT('AT+RESET')">重启设备</button>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($device_type === 'zte'): ?>
+        <!-- 小区锁定 -->
+        <div class="func-panel" id="panelCellLock">
+            <h3>小区锁定</h3>
+            <div class="func-row">
+                <label class="func-label">频点:</label>
+                <input type="text" id="lteCellArfcn" class="func-input-sm" style="width:80px;">
+                <label class="func-label" style="margin-left:16px;">小区:</label>
+                <input type="text" id="lteCellPci" class="func-input-sm" style="width:80px;">
+                <label class="func-label" style="margin-left:16px;">是否锁定:</label>
+                <input type="checkbox" id="lteCellLock">
+                <span class="func-separator"></span>
+                <button class="btn btn-sm" onclick="sendAT('AT+ZLC?')">读取</button>
+                <button class="btn btn-sm btn-primary" onclick="writeCellLock()">写入</button>
+            </div>
+            <p class="func-hint">显示的仅为之前保存锁定小区的数据，并非是当前实际接入的小区</p>
+        </div>
+        <?php endif; ?>
+
+        <!-- 频段选择 -->
+        <div class="func-panel" id="panelBand">
+            <h3>频段选择</h3>
+            <div class="band-checkboxes" id="bandCheckboxes">
+                <?php
+                $bands = [1, 3, 5, 8, 38, 39, 40, 41];
+                foreach ($bands as $b): ?>
+                <label class="band-label">
+                    <input type="checkbox" class="band-cb" value="<?php echo $b; ?>"> LTE B<?php echo $b; ?>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <div class="func-row" style="margin-top:10px;">
+                <button class="btn btn-sm" onclick="readBand()">读取频段</button>
+                <button class="btn btn-sm btn-primary" onclick="lockBand()">锁定频段</button>
+                <?php if ($device_type === 'zte'): ?>
+                <button class="btn btn-sm" onclick="sendAT('AT+CFUN=4');setTimeout(()=>sendAT('AT+CFUN=1'),5000)">重启网络</button>
+                <?php endif; ?>
+            </div>
+            <p class="func-hint">显示的频段不一定支持，能成功锁定的频段才算是支持</p>
+        </div>
+
+        <?php endif; ?>
 
         <!-- 数据收发区 -->
         <div class="data-panel">
@@ -227,7 +354,7 @@ async function connectSerial() {
         isConnected = true;
         updateConnectionStatus(true);
         
-        addLog('系统', '串口连接成功', 'success');
+        addLog('系统', '串口连接成功', 'success', '连接成功');
         
         // 记录日志
         fetch('/api/stats.php', {
@@ -245,7 +372,7 @@ async function connectSerial() {
         
     } catch (error) {
         console.error('连接失败:', error);
-        addLog('系统', '连接失败: ' + error.message, 'error');
+        addLog('系统', '连接失败: ' + error.message, 'error', '连接失败');
         
         // 记录日志
         fetch('/api/stats.php', {
@@ -281,11 +408,11 @@ async function disconnectSerial() {
         
         isConnected = false;
         updateConnectionStatus(false);
-        addLog('系统', '串口已断开', 'info');
+        addLog('系统', '串口已断开', 'info', '断开连接');
         
     } catch (error) {
         console.error('断开失败:', error);
-        addLog('系统', '断开失败: ' + error.message, 'error');
+        addLog('系统', '断开失败: ' + error.message, 'error', '断开失败');
     }
 }
 
@@ -299,11 +426,11 @@ async function sendAT(command) {
     try {
         const data = command + '\r\n';
         await writer.write(new TextEncoder().encode(data));
-        addLog('发送', command, 'send');
+        addLog('发送', command, 'send', getATDesc(command));
         
     } catch (error) {
         console.error('发送失败:', error);
-        addLog('发送', '失败: ' + error.message, 'error');
+        addLog('发送', '失败: ' + error.message, 'error', '发送失败');
     }
 }
 
@@ -330,12 +457,12 @@ async function sendData() {
     
     try {
         await writer.write(new TextEncoder().encode(data + '\r\n'));
-        addLog('发送', data, 'send');
+        addLog('发送', data, 'send', getATDesc(data));
         input.value = '';
         
     } catch (error) {
         console.error('发送失败:', error);
-        addLog('发送', '失败: ' + error.message, 'error');
+        addLog('发送', '失败: ' + error.message, 'error', '发送失败');
     }
 }
 
@@ -347,12 +474,13 @@ async function readData() {
             if (done) break;
             
             const text = new TextDecoder().decode(value);
-            addLog('接收', text.trim(), 'receive');
+            addLog('接收', text.trim(), 'receive', getResponseLabel(text));
+            handleResponseData(text);
         }
     } catch (error) {
         if (isConnected) {
             console.error('读取错误:', error);
-            addLog('系统', '读取错误: ' + error.message, 'error');
+            addLog('系统', '读取错误: ' + error.message, 'error', '读取错误');
         }
     }
 }
@@ -378,15 +506,79 @@ function updateConnectionStatus(connected) {
     }
 }
 
-// 添加日志
-function addLog(type, message, level) {
+function getATDesc(command) {
+    const cmd = command.trim().replace(/\r?\n$/, '');
+    const commands = AT_COMMANDS[DEVICE_TYPE] || AT_COMMANDS.zte;
+    const found = commands.find(item => item.cmd === cmd);
+    if (found) return found.desc;
+    const cmdBase = cmd.replace(/=.+$/, '').replace(/\?.*$/, '?');
+    const foundBase = commands.find(item => {
+        const base = item.cmd.replace(/=.+$/, '').replace(/\?.*$/, '?');
+        return base === cmdBase;
+    });
+    return foundBase ? foundBase.desc : '';
+}
+
+const RESPONSE_LABELS = [
+    { pattern: /^OK$/i, label: '执行成功' },
+    { pattern: /^ERROR$/i, label: '执行失败' },
+    { pattern: /^\+CME ERROR:\s*(\d+)/i, label: '模块错误' },
+    { pattern: /^\+CMS ERROR:\s*(\d+)/i, label: '短信错误' },
+    { pattern: /^\+CREG:/i, label: '网络注册状态' },
+    { pattern: /^\+CGREG:/i, label: 'GPRS注册状态' },
+    { pattern: /^\+CEREG:/i, label: 'LTE注册状态' },
+    { pattern: /^\+CSQ:/i, label: '信号质量' },
+    { pattern: /^\+CPIN:/i, label: 'SIM卡状态' },
+    { pattern: /^\+COPS:/i, label: '运营商信息' },
+    { pattern: /^\+CGMI:/i, label: '厂商信息' },
+    { pattern: /^\+CGMM:/i, label: '模块型号' },
+    { pattern: /^\+CGMR:/i, label: '软件版本' },
+    { pattern: /^\+CGSN:/i, label: 'IMEI号' },
+    { pattern: /^\+CGDCONT:/i, label: 'PDP上下文' },
+    { pattern: /^\+ZSNT:/i, label: '网络模式' },
+    { pattern: /^\+ZGSR:/i, label: '服务报告' },
+    { pattern: /^\+ZSIM:/i, label: 'SIM卡信息' },
+    { pattern: /^\+ZCDRUN:/i, label: '开发模式' },
+    { pattern: /^\+ZLC:/i, label: '小区锁定' },
+    { pattern: /^ZLTEAMTBAND:/i, label: '支持频段' },
+    { pattern: /^\+ZLTEBAND:/i, label: '锁定频段' },
+    { pattern: /^\+ASRSTK:/i, label: 'STK信息' },
+    { pattern: /^\+ASRNET:/i, label: '网络信息' },
+    { pattern: /^\+ASRCSQ:/i, label: '详细信号' },
+    { pattern: /^\+ASRBAND:/i, label: '频段信息' },
+    { pattern: /^\+ASRLOCK:/i, label: '频段锁定' },
+    { pattern: /^\+ASRNV:/i, label: 'NV信息' },
+    { pattern: /^\+SPNWNAME:/i, label: '网络名称' },
+    { pattern: /^\+SPUSIMCFG:/i, label: 'SIM配置' },
+    { pattern: /^\+SPNVMREAD:/i, label: 'NV读取' },
+    { pattern: /^\+SPBAND:/i, label: '频段信息' },
+    { pattern: /^\+SPNETMODE:/i, label: '网络模式' },
+    { pattern: /^\+SPAPNCFG:/i, label: 'APN配置' },
+    { pattern: /^RING$/i, label: '来电振铃' },
+    { pattern: /^NO CARRIER$/i, label: '无载波' },
+    { pattern: /^BUSY$/i, label: '线路忙' },
+    { pattern: /^NO DIALTONE$/i, label: '无拨号音' },
+    { pattern: /^NO ANSWER$/i, label: '无应答' },
+    { pattern: /^CONNECT/i, label: '已建立连接' },
+];
+
+function getResponseLabel(text) {
+    const line = text.trim().split('\n')[0].trim();
+    for (const item of RESPONSE_LABELS) {
+        if (item.pattern.test(line)) return item.label;
+    }
+    return '';
+}
+
+function addLog(type, message, level, desc) {
     const log = document.getElementById('dataLog');
     const time = new Date().toLocaleTimeString();
     const entry = document.createElement('div');
     entry.className = `log-entry log-${level}`;
-    entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-type">[${type}]</span> ${message}`;
-    log.appendChild(entry);
-    log.scrollTop = log.scrollHeight;
+    const descHtml = desc ? `<span class="log-desc">[${desc}]</span> ` : '';
+    entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-type">[${type}]</span> ${descHtml}${message}`;
+    log.insertBefore(entry, log.firstChild);
+    log.scrollTop = 0;
 }
 
 // 清空数据
@@ -405,8 +597,198 @@ function changeFontSize(delta) {
 // 页面加载完成
 document.addEventListener('DOMContentLoaded', function() {
     renderATCommands();
-    addLog('系统', '页面已加载,请连接串口', 'info');
+    addLog('系统', '页面已加载,请连接串口', 'info', '页面就绪');
 });
+
+const FIELD_CMDS = {
+    zte: {
+        imei:  { read: 'AT+CGSN',    write: (v) => 'AT+MODIMEI=' + v },
+        mac:   { read: 'AT+MAC?',     write: (v) => 'AT+MAC=' + v },
+        mac2:  { read: 'AT+MAC2?',    write: (v) => 'AT+MAC2=' + v },
+    },
+    asr: {
+        imei:  { read: 'AT+CGSN',                  write: (v) => 'AT*MRD_IMEI=W,0,01JAN1970,' + v },
+        sn:    { read: 'AT*MRD_SN?',                write: (v) => 'AT*MRD_SN=W,0,01JAN1970,' + v },
+        mac:   { read: 'AT*MRD_WIFIID?',            write: (v) => 'AT*MRD_WIFIID=W,0,01JAN1970,' + v },
+    }
+};
+
+function readField(field) {
+    const cmds = FIELD_CMDS[DEVICE_TYPE];
+    if (cmds && cmds[field]) {
+        sendAT(cmds[field].read);
+    }
+}
+
+function writeField(field) {
+    const cmds = FIELD_CMDS[DEVICE_TYPE];
+    if (!cmds || !cmds[field]) return;
+    const inputId = 'field' + field.toUpperCase();
+    const val = document.getElementById(inputId)?.value?.trim();
+    if (!val) {
+        Modal.alert('请先输入要写入的值', 'warning');
+        return;
+    }
+    sendAT(cmds[field].write(val));
+}
+
+function toggleADB(mode, enable) {
+    const ip = document.getElementById('adbIp')?.value?.trim() || '192.168.0.1';
+    const debugEnable = enable ? 1 : 0;
+    if (mode === 1) {
+        window.open(`http://${ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=${debugEnable}`);
+    } else {
+        window.open(`http://${ip}/reqproc/proc_post?goformId=SET_DEVICE_MODE&debug_enable=${debugEnable}`);
+    }
+}
+
+function rebootDevice(mode) {
+    const ip = document.getElementById('adbIp')?.value?.trim() || '192.168.0.1';
+    if (mode === 1) {
+        window.open(`http://${ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`);
+    } else {
+        window.open(`http://${ip}/reqproc/proc_post?isTest=false&goformId=REBOOT_DEVICE`);
+    }
+}
+
+function writeCellLock() {
+    const isLock = document.getElementById('lteCellLock')?.checked ? 1 : 0;
+    const arfcn = document.getElementById('lteCellArfcn')?.value?.trim() || '0';
+    const pci = document.getElementById('lteCellPci')?.value?.trim() || '0';
+    sendAT(`AT+ZLC=${isLock},${arfcn},${pci}`);
+}
+
+function readBand() {
+    if (DEVICE_TYPE === 'zte') {
+        sendAT('AT+ZLTEAMTBAND?');
+        setTimeout(() => sendAT('AT+ZLTEBAND?'), 300);
+    } else if (DEVICE_TYPE === 'asr') {
+        sendAT('AT*BAND?');
+    }
+}
+
+function lockBand() {
+    const checked = [...document.querySelectorAll('.band-cb:checked')].map(cb => parseInt(cb.value));
+    if (!checked.length) {
+        Modal.alert('请至少选择一个频段', 'warning');
+        return;
+    }
+    if (DEVICE_TYPE === 'zte') {
+        const arr = [];
+        for (let i = 0; i < 8; i++) {
+            let str = '';
+            for (let j = 0; j < 8; j++) {
+                str = (checked.includes(i * 8 + j + 1) ? '1' : '0') + str;
+            }
+            arr.push(parseInt(str, 2));
+        }
+        sendAT('AT+ZLTEBAND=' + arr.join(','));
+    } else if (DEVICE_TYPE === 'asr') {
+        let bandH = 0, bandL = 0;
+        checked.forEach(item => {
+            if (item <= 20) bandL += Math.pow(2, item - 1);
+            if (item >= 38 && item <= 41) bandH += Math.pow(2, item - 33);
+        });
+        const bs = window._asrBandStr;
+        if (bs) {
+            const bandArr = bs.split(',');
+            bandArr[3] = bandH;
+            bandArr[4] = bandL;
+            sendAT('AT*BAND=' + bandArr.join(','));
+        } else {
+            sendAT('AT*BAND=0,0,0,' + bandH + ',' + bandL);
+        }
+    }
+}
+
+window._zteSupportedBands = [];
+window._asrBandStr = '';
+
+function handleResponseData(text) {
+    const t = text.trim();
+    if (DEVICE_TYPE === 'zte') {
+        if (t.includes('ZLTEAMTBAND:') && t.length > 20) {
+            const raw = t.split('ZLTEAMTBAND:')[1].split('\r\n')[0];
+            window._zteSupportedBands = parseZteBands(raw);
+        }
+        if (t.includes('+ZLTEBAND:') && t.length > 20) {
+            const raw = t.split('+ZLTEBAND:')[1].split('\r\n')[0];
+            const locked = parseZteBands(raw).filter(b => window._zteSupportedBands.includes(b));
+            setBandCheckboxes(window._zteSupportedBands.length ? window._zteSupportedBands : [1,3,5,8,38,39,40,41], locked);
+        }
+        if (t.includes('+CGSN:')) {
+            const v = t.split('+CGSN:')[1].split('\r\n')[0].trim();
+            const el = document.getElementById('fieldIMEI'); if (el) el.value = v;
+        }
+        if (t.includes('+MAC:')) {
+            const v = t.split('+MAC:')[1].split('\r\n')[0].trim();
+            const el = document.getElementById('fieldMAC'); if (el) el.value = v;
+        }
+        if (t.includes('+MAC2:')) {
+            const v = t.split('+MAC2:')[1].split('\r\n')[0].trim();
+            const el = document.getElementById('fieldMAC2'); if (el) el.value = v;
+        }
+        if (t.includes('+ZLC:')) {
+            const arr = t.split('+ZLC:')[1].split('\r\n')[0].trim().split(',');
+            const lockEl = document.getElementById('lteCellLock');
+            const arfcnEl = document.getElementById('lteCellArfcn');
+            const pciEl = document.getElementById('lteCellPci');
+            if (lockEl) lockEl.checked = arr[0] === '1';
+            if (arfcnEl) arfcnEl.value = arr[1] || '';
+            if (pciEl) pciEl.value = arr[2] || '';
+        }
+    } else if (DEVICE_TYPE === 'asr') {
+        if (t.includes('*BAND:') && t.length > 20) {
+            const raw = t.split('*BAND:')[1].split('\r\n')[0];
+            window._asrBandStr = raw;
+            const arr = raw.split(',');
+            const bandH = parseInt(arr[3]).toString(2).split('').reverse();
+            const bandL = parseInt(arr[4]).toString(2).split('').reverse();
+            const checked = [];
+            bandH.forEach((bit, idx) => {
+                if (bit === '1') { if(idx===5) checked.push(38); if(idx===6) checked.push(39); if(idx===7) checked.push(40); if(idx===8) checked.push(41); }
+            });
+            bandL.forEach((bit, idx) => {
+                if (bit === '1' && [1,3,5,8].includes(idx+1)) checked.push(idx+1);
+            });
+            setBandCheckboxes([1,3,5,8,38,39,40,41], checked);
+        }
+        if (t.includes('+CGSN:')) {
+            const v = t.split('+CGSN:')[1].split('\r\n')[0].trim();
+            const el = document.getElementById('fieldIMEI'); if (el) el.value = v;
+        }
+        if (t.includes('AT+CGSN') && !t.includes('+CGSN:')) {
+            const v = t.split('AT+CGSN\r\r\n')[1]?.split('\r\n')[0]?.trim();
+            if (v) { const el = document.getElementById('fieldIMEI'); if (el) el.value = v; }
+        }
+        if (t.includes('*MRD_SN:')) {
+            const v = t.split('*MRD_SN:')[1].split('\r\n')[0].trim();
+            const el = document.getElementById('fieldSN'); if (el) el.value = v;
+        }
+        if (t.includes('*MRD_WIFIID:')) {
+            const v = t.split('*MRD_WIFIID:')[1].split('\r\n')[0].trim().replaceAll(':','');
+            const el = document.getElementById('fieldMAC'); if (el) el.value = v;
+        }
+    }
+}
+
+function parseZteBands(str) {
+    return str.split(',').reduce((p, c, i) => {
+        const bits = parseInt(c).toString(2);
+        for (let j = 0; j < bits.length; j++) {
+            if (parseInt(bits[bits.length - j - 1])) p.push(i * 8 + j + 1);
+        }
+        return p;
+    }, []);
+}
+
+function setBandCheckboxes(allBands, lockedBands) {
+    const container = document.getElementById('bandCheckboxes');
+    if (!container) return;
+    container.innerHTML = allBands.map(b =>
+        `<label class="band-label"><input type="checkbox" class="band-cb" value="${b}" ${lockedBands.includes(b)?'checked':''}> LTE B${b}</label>`
+    ).join('');
+}
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

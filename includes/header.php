@@ -54,6 +54,7 @@ if (!isset($skip_stats)) {
                         <li><a href="/?page=zte" class="<?php echo ($current_page ?? '') === 'zte' ? 'active' : ''; ?>">中兴微</a></li>
                         <li><a href="/?page=asr" class="<?php echo ($current_page ?? '') === 'asr' ? 'active' : ''; ?>">ASR</a></li>
                         <li><a href="/?page=unisoc" class="<?php echo ($current_page ?? '') === 'unisoc' ? 'active' : ''; ?>">展锐</a></li>
+                        <li><a href="/?page=help" class="<?php echo ($current_page ?? '') === 'help' ? 'active' : ''; ?>">帮助</a></li>
                         <li><a href="/?page=about" class="<?php echo ($current_page ?? '') === 'about' ? 'active' : ''; ?>">关于</a></li>
                     </ul>
                 </nav>

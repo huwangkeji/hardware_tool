@@ -83,7 +83,31 @@ INSERT OR IGNORE INTO admin_users (username, password_hash, email)
 VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@example.com');
 
 -- =============================================
--- 表5: 系统配置表(可选)
+-- 表5: 帮助文章表
+-- =============================================
+CREATE TABLE IF NOT EXISTS help_pages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(200) NOT NULL,
+    category VARCHAR(50) NOT NULL DEFAULT 'general',
+    content TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    is_published INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT (datetime('now', 'localtime')),
+    updated_at DATETIME DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_help_pages_category ON help_pages(category);
+CREATE INDEX IF NOT EXISTS idx_help_pages_sort ON help_pages(sort_order);
+
+INSERT OR IGNORE INTO help_pages (id, title, category, content, sort_order, is_published) VALUES
+(1, '驱动安装说明', 'driver', '<h3>驱动安装步骤</h3><ol><li>下载对应芯片的驱动程序</li><li>关闭所有杀毒软件和防火墙</li><li>以管理员身份运行驱动安装程序</li><li>安装完成后重启电脑</li><li>设备管理器中确认COM端口已识别</li></ol><p>如遇安装失败，请尝试更换USB接口或使用USB2.0接口。</p>', 1, 1),
+(2, '浏览器使用要求', 'tool', '<h3>浏览器要求</h3><ul><li>必须使用Chrome 89+或基于Chromium内核的浏览器</li><li>需要开启Web Serial API支持</li><li>建议使用最新版Chrome或Edge浏览器</li></ul><h3>常见问题</h3><ul><li>串口无法识别：请确认浏览器版本并检查驱动是否正常</li><li>数据乱码：请检查波特率设置是否与设备一致</li><li>连接超时：请尝试重新插拔USB线缆</li></ul>', 2, 1),
+(3, '中兴微芯片调试指南', 'zte', '<h3>基本操作</h3><ol><li>进入中兴微调试页面</li><li>选择正确的波特率（默认115200）</li><li>点击"连接串口"选择AT端口</li><li>使用AT指令按钮或自定义指令进行调试</li></ol>', 3, 1),
+(4, 'ASR芯片调试指南', 'asr', '<h3>基本操作</h3><ol><li>进入ASR调试页面</li><li>选择正确的波特率（默认115200）</li><li>点击"连接串口"选择AT端口</li><li>使用AT指令按钮或自定义指令进行调试</li></ol>', 4, 1),
+(5, '展锐芯片调试指南', 'unisoc', '<h3>基本操作</h3><ol><li>进入展锐调试页面</li><li>选择正确的波特率（默认115200）</li><li>点击"连接串口"选择AT端口</li><li>使用AT指令按钮或自定义指令进行调试</li></ol>', 5, 1);
+
+-- =============================================
+-- 表6: 系统配置表(可选)
 -- =============================================
 CREATE TABLE IF NOT EXISTS system_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

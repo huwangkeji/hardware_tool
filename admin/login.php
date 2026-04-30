@@ -2,7 +2,8 @@
 /**
  * 后台登录页面
  */
-// 静态资源直接返回，不经过PHP处理
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 if (preg_match('#^/assets/(css|js|images)/#', $request_uri)) {
     $file_path = __DIR__ . '/../' . ltrim($request_uri, '/');
@@ -21,7 +22,7 @@ if (preg_match('#^/assets/(css|js|images)/#', $request_uri)) {
         if (isset($mime_types[$ext])) {
             header('Content-Type: ' . $mime_types[$ext]);
             header('Cache-Control: public, max-age=2592000');
-            readfile($file_path);
+            @readfile($file_path);
             exit;
         }
     }

@@ -3,6 +3,7 @@
  * 硬件调试工具站 - 前端入口
  * 路由分发器
  */
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 
 // 静态资源直接返回，不经过PHP处理
 $request_uri = $_SERVER['REQUEST_URI'];
@@ -41,7 +42,7 @@ require_once __DIR__ . '/includes/functions.php';
 $page = $_GET['page'] ?? 'home';
 
 // 验证页面是否存在
-$allowed_pages = ['home', 'zte', 'asr', 'unisoc', 'about'];
+$allowed_pages = ['home', 'zte', 'asr', 'unisoc', 'about', 'help'];
 if (!in_array($page, $allowed_pages)) {
     $page = 'home';
 }

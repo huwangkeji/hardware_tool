@@ -51,8 +51,18 @@ function getClientIP() {
  */
 function getSettings() {
     $db = getDB();
-    $stmt = $db->query("SELECT * FROM settings WHERE id = 1");
-    return $stmt->fetch();
+    try {
+        $stmt = $db->query("SELECT * FROM settings WHERE id = 1");
+        return $stmt->fetch();
+    } catch (Exception $e) {
+        return [
+            'site_title' => '硬件调试工具',
+            'site_description' => '支持中兴微、ASR、展锐芯片的串口调试工具',
+            'site_text_logo' => '硬件调试工具',
+            'theme_color' => '#1890ff',
+            'about_content' => '',
+        ];
+    }
 }
 
 /**
@@ -185,4 +195,66 @@ function getStatsOverview($days = 7) {
         'page_stats' => $pageStats,
         'daily_trend' => $dailyTrend
     ];
+}
+
+function getHelpPages($category = null, $publishedOnly = true) {
+    $db = getDB();
+    try {
+        $db->query("SELECT 1 FROM help_pages LIMIT 1");
+    } catch (Exception $e) {
+        $db->exec("CREATE TABLE IF NOT EXISTS help_pages (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            title VARCHAR(200) NOT NULL,
+            category VARCHAR(50) NOT NULL DEFAULT 'general',
+            content TEXT NOT NULL,
+            sort_order INT DEFAULT 0,
+            is_published TINYINT DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_category (category),
+            INDEX idx_sort (sort_order)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+    $sql = "SELECT * FROM help_pages";
+    $params = [];
+    $conditions = [];
+    if ($category) {
+        $conditions[] = "category = ?";
+        $params[] = $category;
+    }
+    if ($publishedOnly) {
+        $conditions[] = "is_published = 1";
+    }
+    if ($conditions) {
+        $sql .= " WHERE " . implode(" AND ", $conditions);
+    }
+    $sql .= " ORDER BY sort_order ASC, id ASC";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function getHelpPage($id) {
+    $db = getDB();
+    $stmt = $db->prepare("SELECT * FROM help_pages WHERE id = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetch();
+}
+
+function createHelpPage($title, $category, $content, $sortOrder = 0, $isPublished = 1) {
+    $db = getDB();
+    $stmt = $db->prepare("INSERT INTO help_pages (title, category, content, sort_order, is_published) VALUES (?, ?, ?, ?, ?)");
+    return $stmt->execute([$title, $category, $content, $sortOrder, $isPublished]);
+}
+
+function updateHelpPage($id, $title, $category, $content, $sortOrder, $isPublished) {
+    $db = getDB();
+    $stmt = $db->prepare("UPDATE help_pages SET title = ?, category = ?, content = ?, sort_order = ?, is_published = ?, updated_at = NOW() WHERE id = ?");
+    return $stmt->execute([$title, $category, $content, $sortOrder, $isPublished, $id]);
+}
+
+function deleteHelpPage($id) {
+    $db = getDB();
+    $stmt = $db->prepare("DELETE FROM help_pages WHERE id = ?");
+    return $stmt->execute([$id]);
 }

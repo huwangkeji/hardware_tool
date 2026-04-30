@@ -13,9 +13,9 @@ define('DB_TYPE', 'mysql');  // 当前使用MySQL数据库
 // MySQL 数据库配置(如果选择mysql,请配置以下参数)
 // =============================================
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'hardware_tool');
-define('DB_USER', 'root');
-define('DB_PASS', 'heicat');  // 请修改为你的MySQL密码
+define('DB_NAME', 'demo_czkree_com');
+define('DB_USER', 'demo_czkree_com');
+define('DB_PASS', 'fPXesGpHZZ7bi5T4');  // 请修改为你的MySQL密码
 define('DB_CHARSET', 'utf8mb4');
 
 // =============================================
@@ -29,13 +29,9 @@ define('SQLITE_DB_FILE', __DIR__ . '/../database/hardware_tool.db');
 function getDB() {
     static $db = null;
     
-    error_log("[DB] 开始获取数据库连接, 类型: " . DB_TYPE);
-    
     if ($db === null) {
         try {
             if (DB_TYPE === 'sqlite') {
-                error_log("[DB-SQLITE] 使用SQLite数据库");
-                // SQLite 连接
                 $dsn = 'sqlite:' . SQLITE_DB_FILE;
                 
                 // 兼容不同PHP版本的SQLite常量
@@ -56,7 +52,6 @@ function getDB() {
                 }
                 
                 $db = new PDO($dsn, null, null, $options);
-                error_log("[DB-SQLITE] SQLite连接成功");
                 
                 // 启用外键约束
                 $db->exec('PRAGMA foreign_keys = ON');
@@ -68,8 +63,6 @@ function getDB() {
                 }
                 
             } else {
-                error_log("[DB-MySQL] 连接MySQL: " . DB_HOST . "/" . DB_NAME);
-                // MySQL 连接
                 $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -77,16 +70,12 @@ function getDB() {
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ];
                 $db = new PDO($dsn, DB_USER, DB_PASS, $options);
-                error_log("[DB-MySQL] MySQL连接成功");
             }
         } catch (PDOException $e) {
-            // 生产环境不应该显示详细错误信息
-            $errorMsg = "数据库连接失败: " . $e->getMessage();
-            error_log("[DB-ERROR] " . $errorMsg);
-            die($errorMsg);
+            error_log("[DB-ERROR] " . $e->getMessage());
+            die("数据库连接失败，请检查配置。");
         }
     }
     
-    error_log("[DB] 返回数据库连接实例");
     return $db;
 }

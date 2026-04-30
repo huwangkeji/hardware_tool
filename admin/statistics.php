@@ -2,7 +2,8 @@
 /**
  * 后台管理 - 访问统计
  */
-// 静态资源直接返回，不经过PHP处理
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 if (preg_match('#^/assets/(css|js|images)/#', $request_uri)) {
     $file_path = __DIR__ . '/../' . ltrim($request_uri, '/');
@@ -175,6 +176,10 @@ $settings = getSettings();
                 <a href="/admin/settings.php" class="nav-item">
                     <span>⚙️</span>
                     <span>网站设置</span>
+                </a>
+                <a href="/admin/help.php" class="nav-item">
+                    <span>📖</span>
+                    <span>帮助文章</span>
                 </a>
                 <a href="/admin/statistics.php" class="nav-item active">
                     <span>📈</span>

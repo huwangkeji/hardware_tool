@@ -8,17 +8,15 @@
 // Session 管理（必须在最前面，独立处理）
 // =============================================
 
-// 设置 Session 保存到项目本地目录
-$sessionDir = __DIR__ . '/../../sessions';
-if (!is_dir($sessionDir)) {
-    @mkdir($sessionDir, 0777, true);
+// 设置 Session 保存到项目根目录下的 sessions
+$sessionDir = __DIR__ . '/../sessions';
+@mkdir($sessionDir, 0777, true);
+if (is_dir($sessionDir)) {
+    ini_set('session.save_path', $sessionDir);
 }
-
-// 配置 Session
-ini_set('session.save_path', $sessionDir);
-ini_set('session.gc_maxlifetime', 3600); // 1小时
-ini_set('session.cookie_lifetime', 0);    // 浏览器关闭后失效
-ini_set('session.use_strict_mode', 1);    // 严格模式
+ini_set('session.gc_maxlifetime', 3600);
+ini_set('session.cookie_lifetime', 0);
+ini_set('session.use_strict_mode', 1);
 
 // 启动 Session
 if (session_status() === PHP_SESSION_NONE) {
