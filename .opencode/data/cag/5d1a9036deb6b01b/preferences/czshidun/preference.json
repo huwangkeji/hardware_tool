@@ -1,0 +1,26 @@
+[
+  {
+    "id": "3afbc3f6cb0141b78e40bd2e47aa2baf",
+    "userID": "czshidun",
+    "domainID": "czshidun",
+    "type": "Language preference",
+    "content": "prefers Chinese for interaction",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-09-11T13:45:07.376Z",
+    "updateTime": "2026-09-11T13:45:07.376Z",
+    "isDeleted": false
+  },
+  {
+    "id": "aa9dcd98d09d4aec84e06e86242df9eb",
+    "userID": "czshidun",
+    "domainID": "czshidun",
+    "type": "Explanation preference",
+    "content": "prefers detailed output including problem lists, specific fix solutions, and final assessment conclusions",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-09-11T13:45:07.440Z",
+    "updateTime": "2026-09-11T13:45:07.440Z",
+    "isDeleted": false
+  }
+]

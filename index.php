@@ -1,34 +1,33 @@
 <?php
 /**
- * 硬件调试工具站 - 前端入口
- * 路由分发器
+ * 硬件调试工具站 - 前端入口 / 路由分发器
+ *
+ * @package HardwareDebugTool
  */
-error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 
-// 静态资源直接返回，不经过PHP处理
-$request_uri = $_SERVER['REQUEST_URI'];
-if (preg_match('#^/assets/(css|js|images)/#', $request_uri)) {
-    // 静态资源直接返回
-    $file_path = __DIR__ . $request_uri;
-    if (file_exists($file_path)) {
-        $ext = pathinfo($file_path, PATHINFO_EXTENSION);
-        $mime_types = [
-            'css' => 'text/css',
-            'js' => 'application/javascript',
-            'png' => 'image/png',
-            'jpg' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif' => 'image/gif',
-            'svg' => 'image/svg+xml',
-            'ico' => 'image/x-icon',
-            'woff' => 'font/woff',
+// 静态资源直接返回，不经过 PHP 应用栈处理（性能优化）
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+if (preg_match('#^/assets/(css|js|images)/#', $requestUri)) {
+    $filePath = __DIR__ . $requestUri;
+    if (file_exists($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'css'   => 'text/css',
+            'js'    => 'application/javascript',
+            'png'   => 'image/png',
+            'jpg'   => 'image/jpeg',
+            'jpeg'  => 'image/jpeg',
+            'gif'   => 'image/gif',
+            'svg'   => 'image/svg+xml',
+            'ico'   => 'image/x-icon',
+            'woff'  => 'font/woff',
             'woff2' => 'font/woff2',
-            'ttf' => 'font/ttf',
+            'ttf'   => 'font/ttf',
         ];
-        if (isset($mime_types[$ext])) {
-            header('Content-Type: ' . $mime_types[$ext]);
+        if (isset($mimeTypes[$ext])) {
+            header('Content-Type: ' . $mimeTypes[$ext]);
             header('Cache-Control: public, max-age=2592000');
-            readfile($file_path);
+            readfile($filePath);
             exit;
         }
     }
@@ -42,7 +41,7 @@ require_once __DIR__ . '/includes/functions.php';
 $page = $_GET['page'] ?? 'home';
 
 // 验证页面是否存在
-$allowed_pages = ['home', 'zte', 'asr', 'unisoc', 'about', 'help'];
+$allowed_pages = ['home', 'zte', 'asr', 'unisoc', 'esp32', 'stm32', 'qualcomm', 'eigencomm', 'mediatek', 'hisilicon', 'xinyi', 'at-reference', 'about', 'help'];
 if (!in_array($page, $allowed_pages)) {
     $page = 'home';
 }

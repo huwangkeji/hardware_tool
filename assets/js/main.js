@@ -14,7 +14,72 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 检查Web Serial API支持
     checkSerialSupport();
+
+    // 移动端导航菜单
+    initMobileNav();
 });
+
+// 移动端导航菜单逻辑
+function initMobileNav() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const mainNav = document.querySelector('.main-nav');
+    const dropdownToggle = document.querySelector('.nav-dropdown .dropdown-toggle');
+    const navDropdown = document.querySelector('.nav-dropdown');
+
+    if (!navToggle || !mainNav) return;
+
+    // 汉堡按钮切换
+    navToggle.addEventListener('click', function() {
+        const isActive = mainNav.classList.toggle('active');
+        navToggle.classList.toggle('active', isActive);
+        navToggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    });
+
+    // 下拉菜单切换（移动端点击展开/收起）
+    if (dropdownToggle && navDropdown) {
+        dropdownToggle.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                e.stopPropagation();
+                navDropdown.classList.toggle('expanded');
+            }
+        });
+    }
+
+    // 点击导航链接后关闭菜单（排除下拉切换按钮）
+    mainNav.querySelectorAll('a').forEach(function(link) {
+        if (link.classList.contains('dropdown-toggle')) return;
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                mainNav.classList.remove('active');
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                if (navDropdown) navDropdown.classList.remove('expanded');
+            }
+        });
+    });
+
+    // 点击页面外部关闭菜单
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth > 768) return;
+        if (!mainNav.contains(e.target) && !navToggle.contains(e.target)) {
+            mainNav.classList.remove('active');
+            navToggle.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            if (navDropdown) navDropdown.classList.remove('expanded');
+        }
+    });
+
+    // 窗口 resize 时重置状态
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            mainNav.classList.remove('active');
+            navToggle.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            if (navDropdown) navDropdown.classList.remove('expanded');
+        }
+    });
+}
 
 // 检查串口API支持
 function checkSerialSupport() {

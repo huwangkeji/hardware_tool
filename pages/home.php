@@ -1,73 +1,183 @@
 <?php
 /**
- * 首页 - 硬件调试工具站
+ * 首页 - 硬件调试工具站（企业级 UI）
  */
 $skip_stats = false;
 require_once __DIR__ . '/../includes/header.php';
+
+// 获取芯片平台数据
+$platforms = getChipPlatforms(true);
+$atCmdCount = countATCommands();
+
+// 解析核心功能和技术特性
+$coreFeatures = json_decode($settings['core_features'] ?? '[]', true) ?: [];
+$techFeatures = json_decode($settings['tech_features'] ?? '[]', true) ?: [];
 ?>
 
 <div class="page-home">
-    <div class="hero-section">
-        <h1><?php echo h($settings['site_title']); ?></h1>
-        <p class="subtitle"><?php echo h($settings['site_description']); ?></p>
-    </div>
 
-    <div class="features-grid">
-        <div class="feature-card" onclick="location.href='/?page=zte'">
-            <div class="card-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
+    <!-- ============ Hero ============ -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <span class="hero-badge">Web Serial API · 浏览器原生串口通信</span>
+            <h1 class="hero-title"><?php echo h($settings['site_title']); ?></h1>
+            <p class="hero-desc"><?php echo h($settings['site_description']); ?></p>
+            <div class="hero-actions">
+                <a href="/?page=zte" class="btn-hero btn-hero-primary">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    开始调试
+                </a>
+                <a href="/?page=at-reference" class="btn-hero btn-hero-ghost">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                    指令百科
+                </a>
             </div>
-            <h3>中兴微调试</h3>
-            <p>支持中兴微芯片串口调试,AT指令测试,固件升级</p>
-            <a href="/?page=zte" class="btn btn-primary">进入调试</a>
         </div>
-
-        <div class="feature-card" onclick="location.href='/?page=asr'">
-            <div class="card-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
-                </svg>
+        <!-- 统计栏 -->
+        <div class="hero-stats">
+            <div class="stat-item">
+                <span class="stat-num"><?php echo count($platforms); ?></span>
+                <span class="stat-label">芯片平台</span>
             </div>
-            <h3>ASR调试</h3>
-            <p>ASR芯片串口调试,语音识别测试,数据传输</p>
-            <a href="/?page=asr" class="btn btn-primary">进入调试</a>
-        </div>
-
-        <div class="feature-card" onclick="location.href='/?page=unisoc'">
-            <div class="card-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
-                </svg>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num"><?php echo $atCmdCount; ?>+</span>
+                <span class="stat-label">AT 指令</span>
             </div>
-            <h3>展锐调试</h3>
-            <p>展锐芯片串口调试,网络测试,系统诊断</p>
-            <a href="/?page=unisoc" class="btn btn-primary">进入调试</a>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num">100%</span>
+                <span class="stat-label">浏览器运行</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num">0</span>
+                <span class="stat-label">安装依赖</span>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <div class="info-section">
-        <div class="info-card">
-            <h3>使用说明</h3>
-            <ul>
-                <li>需要先安装对应驱动到电脑</li>
-                <li>支持基于chromium内核的浏览器(Chrome 89+)</li>
-                <li>串行端口需要选择AT端口</li>
-                <li>若发现数据不对,请多点几次任意读取相关的按钮刷新数据</li>
-            </ul>
+    <!-- ============ 芯片平台 ============ -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">芯片调试平台</h2>
+            <p class="section-subtitle">支持主流物联网通信芯片，在线串口调试 · AT 指令测试 · 固件管理</p>
         </div>
+        <div class="platform-grid">
+            <?php foreach ($platforms as $p):
+                $chips = json_decode($p['chips'] ?? '[]', true) ?: [];
+                $debugUrl = "/?page=" . h($p['type']);
+            ?>
+            <a href="<?php echo $debugUrl; ?>" class="platform-card">
+                <div class="platform-card-top">
+                    <span class="platform-icon"><?php echo h($p['icon']); ?></span>
+                    <span class="platform-name"><?php echo h($p['name']); ?></span>
+                </div>
+                <p class="platform-desc"><?php echo h($p['description']); ?></p>
+                <div class="platform-chips">
+                    <?php foreach (array_slice($chips, 0, 4) as $chip): ?>
+                        <span class="chip-tag"><?php echo h($chip); ?></span>
+                    <?php endforeach; ?>
+                    <?php if (count($chips) > 4): ?>
+                        <span class="chip-tag chip-tag-more">+<?php echo count($chips) - 4; ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="platform-card-footer">
+                    <span class="platform-enter">进入调试</span>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="platform-arrow"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
 
-        <div class="info-card">
-            <h3>技术特性</h3>
-            <ul>
-                <li>基于Web Serial API技术</li>
-                <li>浏览器直接串口通信</li>
-                <li>支持AT指令集</li>
-                <li>实时数据监控</li>
-            </ul>
+    <!-- ============ AT 指令百科 ============ -->
+    <section class="section">
+        <div class="at-banner">
+            <div class="at-banner-bg"></div>
+            <div class="at-banner-body">
+                <div class="at-banner-left">
+                    <span class="at-banner-icon">📖</span>
+                    <div>
+                        <h3 class="at-banner-title">AT 指令百科</h3>
+                        <p class="at-banner-desc">收录全部 <?php echo $atCmdCount; ?> 条 AT 指令，涵盖语法、参数、响应及使用示例</p>
+                    </div>
+                </div>
+                <a href="/?page=at-reference" class="btn-at-banner">
+                    查看全部
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                </a>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- ============ 核心功能 & 技术特性 ============ -->
+    <section class="section">
+        <div class="features-row">
+            <div class="features-panel">
+                <div class="features-panel-header">
+                    <span class="features-panel-icon">⚡</span>
+                    <h3>核心功能</h3>
+                </div>
+                <div class="features-list">
+                    <?php foreach ($coreFeatures as $f): ?>
+                    <div class="feature-item">
+                        <span class="feature-item-icon"><?php echo h($f['icon'] ?? ''); ?></span>
+                        <div>
+                            <h4><?php echo h($f['title'] ?? ''); ?></h4>
+                            <p><?php echo h($f['desc'] ?? ''); ?></p>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="features-panel">
+                <div class="features-panel-header">
+                    <span class="features-panel-icon">🛡️</span>
+                    <h3>技术特性</h3>
+                </div>
+                <div class="features-list">
+                    <?php foreach ($techFeatures as $f): ?>
+                    <div class="feature-item">
+                        <span class="feature-item-icon"><?php echo h($f['icon'] ?? ''); ?></span>
+                        <div>
+                            <h4><?php echo h($f['title'] ?? ''); ?></h4>
+                            <p><?php echo h($f['desc'] ?? ''); ?></p>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 使用指南 ============ -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">使用指南</h2>
+            <p class="section-subtitle">三步开始芯片串口调试</p>
+        </div>
+        <div class="guide-grid">
+            <div class="guide-card">
+                <div class="guide-step">1</div>
+                <h4>安装驱动</h4>
+                <p>将设备通过 USB 连接至电脑，安装对应芯片的串口驱动程序</p>
+            </div>
+            <div class="guide-card">
+                <div class="guide-step">2</div>
+                <h4>打开浏览器</h4>
+                <p>使用 Chrome 89+ 或其他 Chromium 内核浏览器访问本站</p>
+            </div>
+            <div class="guide-card">
+                <div class="guide-step">3</div>
+                <h4>连接调试</h4>
+                <p>选择对应芯片平台，点击「进入调试」，选择 AT 端口即可开始</p>
+            </div>
+        </div>
+    </section>
+
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -260,7 +260,6 @@ body {
 }
 
 .nav-item.logout {
-    margin-top: auto;
     color: var(--danger-color);
     border-top: 1px solid var(--border-color);
     padding-top: 20px;
@@ -526,30 +525,6 @@ body {
     color: var(--danger-color);
 }
 
-/* 表格样式 */
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.data-table th,
-.data-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.data-table th {
-    background: #fafafa;
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.data-table tr:hover {
-    background: #f5f5f5;
-}
-
 /* 图表容器 */
 .chart-container {
     position: relative;
@@ -557,6 +532,124 @@ body {
     background: var(--white);
     padding: 24px;
     border-radius: 12px;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+/* 侧边栏底部 */
+.sidebar-footer {
+    flex-shrink: 0;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: #fafafa;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.sidebar-user .avatar {
+    font-size: 18px;
+}
+
+.sidebar-user .username {
+    flex: 1;
+}
+
+/* 设置表单 */
+.settings-form {
+    background: var(--white);
+    padding: 28px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    margin-bottom: 24px;
+}
+
+.settings-form .form-group {
+    margin-bottom: 20px;
+}
+
+.settings-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.settings-form input,
+.settings-form textarea,
+.settings-form select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s;
+    background: var(--white);
+}
+
+.settings-form input:focus,
+.settings-form textarea:focus,
+.settings-form select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.settings-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* 帮助提示文字 */
+.help-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+/* 次要按钮 */
+.btn-secondary {
+    background: var(--white);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: 12px;
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* 响应式设计 */
